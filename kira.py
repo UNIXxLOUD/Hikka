@@ -31,7 +31,7 @@ class Kira(loader.Module):
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "model",
-                "gpt-4o",
+                "gpt-3.5",
                 lambda: "Модель ChatGPT",
             ),
             loader.ConfigValue(
