@@ -48,10 +48,7 @@ class Kira(loader.Module):
     @loader.command()
     async def kira(self, message):
         """Задать вопрос Кире."""
-        # Ограничим доступ только для пользователя
-        if message.from_id != 123456789:  # Замените на свой ID
-            return await utils.answer(message, "<emoji document_id=5854929766146118183>❌</emoji> <b>Только для владельца.</b>")
-
+        
         q = utils.get_args_raw(message)
         if not q:
             return await utils.answer(message, self.strings["no_args"].format(self.get_prefix(), "kira", "[вопрос]"))
@@ -66,3 +63,4 @@ class Kira(loader.Module):
         )
 
         return await utils.answer(message, self.strings['answer_text'].format(question=q, answer=response.choices[0].message.content.strip(), model=self.config['model']))
+    
