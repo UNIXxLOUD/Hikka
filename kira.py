@@ -1,31 +1,14 @@
-import asyncio
 import logging
-
 from g4f.client import Client
-
 from .. import loader, utils
 
 logger = logging.getLogger(__name__)
 
 @loader.tds
-class Kira(loader.Module):
-    """ИИ девушка для общения и советов."""
+class KiraAssistant(loader.Module):
+    """ИИ-ассистент Кира. Отвечает на вопросы, начинающиеся с 'Кира'."""
 
-    strings = {
-        "name": "Kira",
-
-        "no_args": "<emoji document_id=5854929766146118183>❌</emoji> <b>Нужно </b><code>{}{} {}</code>",
-
-        "asking_chatgpt": """<emoji document_id=5334675996714999970>🔄</emoji> <b>Спрашиваю Киру...</b>
-
-<i><emoji document_id=5370869711888194012>👾</emoji> Вы можете задавать вопросы, и я буду отвечать как Кира.</i>""",
-        
-        "answer_text": """<emoji document_id=5818813162815753343>👨‍💻</emoji> <b>Вопрос:</b> {question}
-
-<emoji document_id=5372981976804366741>🤖</emoji> <b>Ответ:</b> {answer}
-
-<emoji document_id=5424753383741346604>🖥</emoji> <b>Модель</b>: <code>{model}</code>""",
-    }
+    strings = {"name": "Kira"}
 
     def __init__(self):
         self.config = loader.ModuleConfig(
@@ -37,7 +20,7 @@ class Kira(loader.Module):
             loader.ConfigValue(
                 "role",
                 "user",
-                lambda: "Кто ты для ChatGPT?",
+                lambda: "Роль в переписке",
             ),
         )
 
@@ -45,22 +28,31 @@ class Kira(loader.Module):
         self.db = db
         self._client = client
 
-    @loader.command()
-    async def kira(self, message):
-        """Задать вопрос Кире."""
-        
-        q = utils.get_args_raw(message)
-        if not q:
-            return await utils.answer(message, self.strings["no_args"].format(self.get_prefix(), "kira", "[вопрос]"))
+    async def watcher(self, message):
+        if not message.text:
+            return
 
-        await utils.answer(message, self.strings['asking_chatgpt'].format(prefix=self.get_prefix()))
+        if not message.text.lower().startswith("кира "):
+            return
+
+        # Только пользователь может использовать
+        if message.sender_id != (await self._client.get_me()).id:
+            return
+
+        question = message.text[5:].strip()
+        if not question:
+            return
 
         client = Client()
-        response = client.chat.completions.create(
-            model=self.config['model'],
-            messages=[{"role": self.config['role'], "content": q}],
-            stream=False,
-        )
+        try:
+            response = client.chat.completions.create(
+                model=self.config["model"],
+                messages=[{"role": self.config["role"], "content": question}],
+                stream=False,
+            )
+            answer = response.choices[0].message.content.strip()
+        except Exception as e:
+            answer = f"Ошибка: {e}"
 
-        return await utils.answer(message, self.strings['answer_text'].format(question=q, answer=response.choices[0].message.content.strip(), model=self.config['model']))
-    
+        await message.edit(answer)
+        
