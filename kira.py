@@ -5,22 +5,18 @@ from .. import loader, utils
 logger = logging.getLogger(__name__)
 
 @loader.tds
-class KiraAssistant(loader.Module):
-    """ИИ-ассистент Кира. Отвечает на вопросы, начинающиеся с 'Кира'."""
+class Kira(loader.Module):
+    """ИИ-девушка Кира. Реагирует только на сообщения от владельца, начинающиеся с 'Кира ' и отвечает прямо в это сообщение."""
 
     strings = {"name": "Kira"}
 
     def __init__(self):
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
-                "model",
-                "gpt-4o",
-                lambda: "Модель ChatGPT",
+                "model", "gpt-4o", lambda: "Модель ChatGPT"
             ),
             loader.ConfigValue(
-                "role",
-                "user",
-                lambda: "Роль в переписке",
+                "role", "user", lambda: "Кто ты для ChatGPT?"
             ),
         )
 
@@ -29,30 +25,27 @@ class KiraAssistant(loader.Module):
         self._client = client
 
     async def watcher(self, message):
-        if not message.text:
-            return
-
-        if not message.text.lower().startswith("кира "):
-            return
-
-        # Только пользователь может использовать
+        # Только реагировать на сообщения пользователя
         if message.sender_id != (await self._client.get_me()).id:
             return
 
-        question = message.text[5:].strip()
-        if not question:
+        if not message.text or not message.text.lower().startswith("кира "):
             return
 
-        client = Client()
+        query = message.text[5:].strip()
+        if not query:
+            return await message.edit("Не могу ответить: запрос пустой.")
+
         try:
+            client = Client()
             response = client.chat.completions.create(
                 model=self.config["model"],
-                messages=[{"role": self.config["role"], "content": question}],
+                messages=[{"role": self.config["role"], "content": query}],
                 stream=False,
             )
             answer = response.choices[0].message.content.strip()
         except Exception as e:
-            answer = f"Ошибка: {e}"
+            answer = f"Кира: ошибка — {e}"
 
         await message.edit(answer)
         
