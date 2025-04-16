@@ -1,58 +1,64 @@
-import logging
-from g4f.client import Client
 from .. import loader, utils
-
-logger = logging.getLogger(__name__)
+import requests
 
 @loader.tds
 class KiraAssistant(loader.Module):
-    """ИИ-ассистент Кира. Отвечает на вопросы, начинающиеся с 'Кира'."""
+    """A simple assistant module that responds to commands using Hugging Face Transformers."""
+    
+    strings = {
+        "name": "KiraAssistant",
+        "running": "<emoji document_id=5870718740236079262>🌟</emoji> <b>Обработка запроса...</b>",
+        "error": "<emoji document_id=🚫</emoji> <b>Произошла ошибка:</b> <code>{error}</code>",
+        "voice_recorded": "<emoji document_id=📥</emoji> <b>Голосовое сообщение записано!</b>",
+        "response": "<emoji document_id=💬</emoji> <b>Ответ:</b> <code>{response}</code>",
+    }
 
-    strings = {"name": "Kira"}
-
-    def __init__(self):
-        self.config = loader.ModuleConfig(
-            loader.ConfigValue(
-                "model",
-                "gpt-4o",
-                lambda: "Модель ChatGPT",
-            ),
-            loader.ConfigValue(
-                "role",
-                "user",
-                lambda: "Роль в переписке",
-            ),
-        )
+    strings_ru = {
+        "running": "<emoji document_id=5870718740236079262>🌟</emoji> <b>Обработка запроса...</b>",
+        "error": "<emoji document_id=🚫</emoji> <b>Произошла ошибка:</b> <code>{error}</code>",
+        "voice_recorded": "<emoji document_id=📥</emoji> <b>Голосовое сообщение записано!</b>",
+        "response": "<emoji document_id=💬</emoji> <b>Ответ:</b> <code>{response}</code>",
+    }
 
     async def client_ready(self, client, db):
-        self.db = db
-        self._client = client
+        self.client = client
 
-    async def watcher(self, message):
-        if not message.text:
-            return
+    async def kiracmd(self, message):
+        """Используйте 'Кира <ваш запрос>' для получения ответа."""
+        await utils.answer(message, self.strings("running"))
 
-        if not message.text.lower().startswith("кира "):
-            return
+        query = message.text.split(' ', 1)
+        if len(query) > 1:
+            user_query = query[1]
+            try:
+                response = await self.get_ai_response(user_query)
+                await utils.answer(message, self.strings("response").format(response=response))
+            except Exception as e:
+                await utils.answer(message, self.strings("error").format(error=str(e)))
+        else:
+            await utils.answer(message, self.strings("error").format(error="Необходим запрос после 'Кира'."))
 
-        # Только пользователь может использовать
-        if message.sender_id != (await self._client.get_me()).id:
-            return
+    async def kirasaycmd(self, message):
+        """Используйте 'Кира скажи <ваше сообщение>' для записи голосового сообщения."""
+        await utils.answer(message, self.strings("running"))
 
-        question = message.text[5:].strip()
-        if not question:
-            return
+        user_message = message.text.split(' ', 2)[-1]  
+        await utils.answer(message, self.strings("voice_recorded"))
 
-        client = Client()
-        try:
-            response = client.chat.completions.create(
-                model=self.config["model"],
-                messages=[{"role": self.config["role"], "content": question}],
-                stream=False,
-            )
-            answer = response.choices[0].message.content.strip()
-        except Exception as e:
-            answer = f"Ошибка: {e}"
-
-        await message.edit(answer)
+    async def get_ai_response(self, query):
+        headers = {
+            "Authorization": "Bearer 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"
+        }
         
+        payload = {
+            "inputs": query,
+        }
+
+        response = requests.post('https://api-inference.huggingface.co/models/gpt2', headers=headers, json=payload)
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result[0]['generated_text']
+        else:
+            raise Exception("Ошибка API: " + response.text)
+            
