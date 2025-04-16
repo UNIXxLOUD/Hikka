@@ -7,17 +7,17 @@ class KiraAssistant(loader.Module):
     
     strings = {
         "name": "KiraAssistant",
-        "running": "<emoji document_id=5870718740236079262>🌟</emoji> <b>Обработка запроса...</b>",
-        "error": "<emoji document_id=🚫</emoji> <b>Произошла ошибка:</b> <code>{error}</code>",
-        "voice_recorded": "<emoji document_id=📥</emoji> <b>Голосовое сообщение записано!</b>",
-        "response": "<emoji document_id=💬</emoji> <b>Ответ:</b> <code>{response}</code>",
+        "running": "🌟 <b>Обработка запроса...</b>",
+        "error": "🚫 <b>Произошла ошибка:</b> <code>{error}</code>",
+        "voice_recorded": "📥 <b>Голосовое сообщение записано!</b>",
+        "response": "💬 <b>Ответ:</b> <code>{response}</code>",
     }
 
     strings_ru = {
-        "running": "<emoji document_id=5870718740236079262>🌟</emoji> <b>Обработка запроса...</b>",
-        "error": "<emoji document_id=🚫</emoji> <b>Произошла ошибка:</b> <code>{error}</code>",
-        "voice_recorded": "<emoji document_id=📥</emoji> <b>Голосовое сообщение записано!</b>",
-        "response": "<emoji document_id=💬</emoji> <b>Ответ:</b> <code>{response}</code>",
+        "running": "🌟 <b>Обработка запроса...</b>",
+        "error": "🚫 <b>Произошла ошибка:</b> <code>{error}</code>",
+        "voice_recorded": "📥 <b>Голосовое сообщение записано!</b>",
+        "response": "💬 <b>Ответ:</b> <code>{response}</code>",
     }
 
     async def client_ready(self, client, db):
