@@ -7,10 +7,9 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 
 TOKEN = "8413125735:AAG19QW3kOSPOjfNiD4GVmFHjvbWZb5LYao"
 SCRIPTS_DIR = os.path.expanduser("~/python_scripts")
-LOG_FILE = os.path.join(SCRIPTS_DIR, "bot.log")
 processes = {}
 
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("Загрузить .py файл", callback_data="upload")]]
